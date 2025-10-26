@@ -202,40 +202,6 @@ export function InterviewPrep({
                   <Input id="interview-job-link" value={jobLink} onChange={(event) => setJobLink(event.target.value)} placeholder="https://..." />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="interview-job-title" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Job title
-                  </label>
-                  <Input id="interview-job-title" value={jobTitle} onChange={(event) => setJobTitle(event.target.value)} placeholder={analysis.candidate.targetRole} />
-                </div>
-                <div className="space-y-2">
-                  <label htmlFor="interview-experience-level" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Experience level
-                  </label>
-                  <Input id="interview-experience-level" value={experienceLevel} onChange={(event) => setExperienceLevel(event.target.value)} placeholder="Director" />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label htmlFor="interview-job-description" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Focus areas
-                  </label>
-                  <Input
-                    id="interview-job-description"
-                    value={jobDescription}
-                    onChange={(event) => setJobDescription(event.target.value)}
-                    placeholder="Responsible AI · GTM experimentation · Stakeholder alignment"
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label htmlFor="interview-competencies" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Competencies to emphasize
-                  </label>
-                  <Input
-                    id="interview-competencies"
-                    value={competencies}
-                    onChange={(event) => setCompetencies(event.target.value)}
-                    placeholder="Executive storytelling, experimentation velocity, metrics governance"
-                  />
-                </div>
-                <div className="space-y-2">
                   <label htmlFor="form-interview-type" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Interview type
                   </label>

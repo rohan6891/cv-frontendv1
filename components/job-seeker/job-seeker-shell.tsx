@@ -18,8 +18,8 @@ export function JobSeekerShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <aside className="hidden h-screen w-72 flex-col overflow-y-auto border-r border-border/60 bg-muted/20 p-6 md:flex">
+    <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
+      <aside className="hidden h-full w-72 flex-col overflow-y-auto border-r border-border/60 bg-muted/20 p-6 md:flex">
         <div className="flex items-center gap-3 pb-6">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-lg font-semibold text-white">
             PS8
@@ -48,23 +48,12 @@ export function JobSeekerShell({ children }: { children: ReactNode }) {
         </nav>
       </aside>
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <header className="shrink-0 border-b border-border/60 px-6 py-6">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold md:text-3xl">Candidate command center</h1>
-              <p className="text-sm text-muted-foreground">
-                Coordinate your analysis, interview prep, and resume upgrades without leaving this workspace.
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Button asChild variant="outline" className="rounded-full">
-                <Link href="/job-seeker/analysis">View latest analysis</Link>
-              </Button>
-              <Button asChild className="rounded-full">
-                <Link href="/job-seeker/resume">Enhance resume</Link>
-              </Button>
-            </div>
+          <div className="flex items-center justify-end">
+            <Button asChild variant="outline" className="rounded-full">
+              <Link href="/login">Logout</Link>
+            </Button>
           </div>
           <div className="mt-4 flex flex-wrap gap-2 md:hidden">
             {jobSeekerNavigationItems.map((item) => (
@@ -80,7 +69,7 @@ export function JobSeekerShell({ children }: { children: ReactNode }) {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto px-6 py-8">{children}</main>
+        <main className="flex-1 overflow-y-auto px-6 py-8 min-h-0">{children}</main>
       </div>
     </div>
   )
