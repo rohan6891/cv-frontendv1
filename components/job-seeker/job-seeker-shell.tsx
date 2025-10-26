@@ -1,21 +1,46 @@
-'use client'
+"use client"
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { Briefcase } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { jobSeekerNavigationItems } from '@/lib/job-seeker-data'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 export function JobSeekerShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const [menuOpen, setMenuOpen] = useState(false)
+  const [user, setUser] = useState<{ full_name?: string; role?: string } | null>(null)
 
   const isActive = (href: string) => {
     if (href === '/job-seeker/dashboard') {
       return pathname === href
     }
     return pathname === href || pathname.startsWith(`${href}/`)
+  }
+
+  useEffect(() => {
+    try {
+      const u = localStorage.getItem('user')
+      if (u) setUser(JSON.parse(u))
+    } catch {}
+  }, [])
+
+  const initials = useMemo(() => {
+    const name = user?.full_name?.trim() || 'User'
+    const parts = name.split(' ')
+    return (parts[0]?.[0] || 'U') + (parts[1]?.[0] || '')
+  }, [user])
+
+  function logout() {
+    try {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+    } catch {}
+    window.location.href = '/login'
   }
 
   return (
@@ -51,10 +76,31 @@ export function JobSeekerShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="shrink-0 border-b border-border/60 px-6 py-6">
-          <div className="flex items-center justify-end">
-            <Button asChild variant="outline" className="rounded-full">
-              <Link href="/login">Logout</Link>
-            </Button>
+          <div className="flex items-center justify-end relative">
+            <button
+              onClick={() => setMenuOpen((x) => !x)}
+              className="flex items-center gap-3 rounded-full border border-border/60 px-3 py-2 hover:bg-muted/50"
+            >
+              <Avatar>
+                <AvatarFallback>{initials.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="hidden text-left text-sm md:block">
+                <div className="font-medium leading-tight">{user?.full_name || 'User'}</div>
+                <div className="text-xs text-muted-foreground">{(user?.role || 'candidate').toString()}</div>
+              </div>
+            </button>
+            {menuOpen && (
+              <div className="absolute right-6 top-16 z-10 w-56 rounded-xl border border-border/60 bg-background p-2 shadow">
+                <div className="px-3 py-2 text-sm">
+                  <div className="font-semibold">{user?.full_name || 'User'}</div>
+                  <div className="text-xs text-muted-foreground">Role: {(user?.role || 'candidate').toString()}</div>
+                </div>
+                <div className="my-1 h-px bg-border/60" />
+                <Button variant="outline" className="w-full justify-start rounded-lg" onClick={logout}>
+                  Logout
+                </Button>
+              </div>
+            )}
           </div>
           <div className="mt-4 flex flex-wrap gap-2 md:hidden">
             {jobSeekerNavigationItems.map((item) => (

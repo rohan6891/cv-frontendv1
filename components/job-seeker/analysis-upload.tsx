@@ -24,7 +24,8 @@ export type AnalysisUploadProps = {
   onUploadResume: (file: File | null) => void
   onBackToDashboard: () => void
   onViewExistingAnalysis: () => void
-  onGenerateAnalysis: () => void
+  onGenerateAnalysis: (jobLink: string) => void
+  loading?: boolean
 }
 
 export function AnalysisUpload({
@@ -33,6 +34,7 @@ export function AnalysisUpload({
   onBackToDashboard,
   onViewExistingAnalysis,
   onGenerateAnalysis,
+  loading = false,
 }: AnalysisUploadProps) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const [jobLink, setJobLink] = useState('')
@@ -98,8 +100,8 @@ export function AnalysisUpload({
       </Card>
 
       <div className="flex flex-wrap justify-end gap-3">
-        <Button className="rounded-full" onClick={onGenerateAnalysis}>
-          Generate analysis
+        <Button className="rounded-full" onClick={() => onGenerateAnalysis(jobLink)} disabled={loading}>
+          {loading ? 'Generating…' : 'Generate analysis'}
         </Button>
       </div>
 

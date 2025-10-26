@@ -26,6 +26,7 @@ export type InterviewPrepProps = {
   showIntakeFields?: boolean
   onBackToAnalysis: () => void
   onGoToResume: () => void
+  onGenerateQuestions?: (opts: { interviewType: string; count: number }) => Promise<Array<{ question: string; answer: string }>>
 }
 
 export function InterviewPrep({
@@ -35,6 +36,7 @@ export function InterviewPrep({
   showIntakeFields = true,
   onBackToAnalysis,
   onGoToResume,
+  onGenerateQuestions,
 }: InterviewPrepProps) {
   const [stage, setStage] = useState<'intake' | 'ready' | 'results'>(showIntakeFields ? 'intake' : 'ready')
   const [jobLink, setJobLink] = useState('')
@@ -46,6 +48,8 @@ export function InterviewPrep({
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [numberOfQuestions, setNumberOfQuestions] = useState('6')
   const [openQuestionIds, setOpenQuestionIds] = useState<string[]>([])
+  const [loading, setLoading] = useState(false)
+  const [backendItems, setBackendItems] = useState<Array<{ question: string; answer: string }>>([])
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
@@ -54,6 +58,14 @@ export function InterviewPrep({
   }, [showIntakeFields])
 
   const questionBank = useMemo(() => {
+    if (backendItems.length) {
+      return backendItems.map((qa, index) => ({
+        id: `gen-${index}`,
+        topic: interviewTypeLabels[interviewType] ?? 'Interview',
+        question: qa.question,
+        answer: qa.answer,
+      }))
+    }
     return analysis.interviewTopics.flatMap((topic) =>
       topic.questions.map((question, index) => ({
         id: `${topic.topic}-${index}`,
@@ -62,7 +74,7 @@ export function InterviewPrep({
         answer: topic.coaching,
       })),
     )
-  }, [analysis.interviewTopics])
+  }, [analysis.interviewTopics, backendItems, interviewType])
 
   const maxQuestions = Math.max(1, Math.min(interviewQuestionLimit, questionBank.length))
   const sanitizedCount = Math.max(1, Math.min(maxQuestions, parseInt(numberOfQuestions, 10) || 1))
@@ -87,8 +99,20 @@ export function InterviewPrep({
     event.target.value = ''
   }
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setOpenQuestionIds([])
+    if (onGenerateQuestions) {
+      try {
+        setLoading(true)
+        const items = await onGenerateQuestions({ interviewType, count: sanitizedCount })
+        setBackendItems(items || [])
+      } catch (e) {
+        // ignore, fallback to local
+        setBackendItems([])
+      } finally {
+        setLoading(false)
+      }
+    }
     setStage('results')
   }
 
@@ -301,8 +325,8 @@ export function InterviewPrep({
               </Button>
             </>
           ) : (
-            <Button type="button" className="rounded-full" onClick={handleGenerate}>
-              Generate question pack
+            <Button type="button" className="rounded-full" onClick={handleGenerate} disabled={loading}>
+              {loading ? 'Generating…' : 'Generate question pack'}
             </Button>
           )}
         </CardFooter>

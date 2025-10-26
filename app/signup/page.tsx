@@ -1,18 +1,45 @@
+"use client"
 import Link from "next/link"
-import type { Metadata } from "next"
-import { ArrowRight, Lock, Mail, Sparkles, User, UserPlus } from "lucide-react"
+import { Lock, Mail, Sparkles, User, UserPlus } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { register, login, me, type Role } from "@/lib/api"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-export const metadata: Metadata = {
-  title: "Sign up | PS8 Smart Resume Analyzer",
-  description: "Create your PS8 account to unlock AI insights, resume optimization, and tailored job matching.",
-}
-
 export default function SignupPage() {
+  const router = useRouter()
+  const [fullName, setFullName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [role, setRole] = useState<Role>("candidate")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      await register({ email, password, full_name: fullName, role })
+      const { access_token } = await login({ email, password })
+      localStorage.setItem("token", access_token)
+      const user = await me(access_token)
+      localStorage.setItem("user", JSON.stringify(user))
+      if (user.role === "candidate") {
+        router.push("/job-seeker/dashboard")
+      } else {
+        router.push("/")
+      }
+    } catch (err: any) {
+      setError(err?.message || "Sign up failed")
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground md:flex-row">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10" aria-hidden />
@@ -53,13 +80,19 @@ export default function SignupPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+            <form className="space-y-6" onSubmit={onSubmit}>
             <div className="space-y-1">
               <label htmlFor="name" className="text-sm font-medium text-foreground">
                 Full name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="name" placeholder="Jordan Smith" className="h-12 rounded-xl pl-10" />
+                <Input id="name" placeholder="Jordan Smith" className="h-12 rounded-xl pl-10" value={fullName} onChange={(e)=>setFullName(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-1">
@@ -68,7 +101,7 @@ export default function SignupPage() {
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="signup-email" type="email" placeholder="you@example.com" className="h-12 rounded-xl pl-10" />
+                <Input id="signup-email" type="email" placeholder="you@example.com" className="h-12 rounded-xl pl-10" value={email} onChange={(e)=>setEmail(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-1">
@@ -77,16 +110,23 @@ export default function SignupPage() {
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="signup-password" type="password" placeholder="Create a strong password" className="h-12 rounded-xl pl-10" />
+                <Input id="signup-password" type="password" placeholder="Create a strong password" className="h-12 rounded-xl pl-10" value={password} onChange={(e)=>setPassword(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-1">
-              <label htmlFor="role-focus" className="text-sm font-medium text-foreground">
-                Desired role focus
+              <label htmlFor="role" className="text-sm font-medium text-foreground">
+                Account role
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="role-focus" placeholder="e.g., Product Manager, Data Analyst" className="h-12 rounded-xl pl-10" />
+                <select
+                  id="role"
+                  className="h-12 w-full rounded-xl border border-border bg-background px-3 text-sm"
+                  value={role}
+                  onChange={(e)=>setRole(e.target.value as Role)}
+                >
+                  <option value="candidate">Candidate</option>
+                  <option value="recruiter">Recruiter</option>
+                </select>
               </div>
             </div>
             <div className="text-xs text-muted-foreground">
@@ -100,13 +140,10 @@ export default function SignupPage() {
               </Link>
               .
             </div>
-            <Button className="h-12 w-full rounded-xl text-base font-semibold">Create account</Button>
-            <Button variant="outline" className="h-12 w-full rounded-xl border-border/70">
-              <span className="flex items-center justify-center gap-2 text-sm font-medium">
-                Continue with LinkedIn
-                <ArrowRight className="h-4 w-4" />
-              </span>
+            <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-base font-semibold">
+              {loading ? "Creating..." : "Create account"}
             </Button>
+            </form>
           </CardContent>
           <CardFooter className="flex flex-col gap-3 text-sm text-muted-foreground">
             <div className="flex justify-center gap-2">
