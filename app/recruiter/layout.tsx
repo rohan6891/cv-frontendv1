@@ -1,115 +1,145 @@
 'use client'
 
-import React, { useState } from 'react'
-import { Menu, X, Moon, Sun, Search, Briefcase, Users, Settings, LogOut } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { BarChart3, Briefcase, LogOut, Menu, Search, Users, X } from 'lucide-react'
 
-// Inline types for nav items
-interface NavItem {
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+
+type NavItem = {
   name: string
-  icon: React.ComponentType<{ size?: number }>
+  icon: React.ComponentType<{ className?: string }>
   page: string
 }
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const [darkMode, setDarkMode] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [showProfileMenu, setShowProfileMenu] = useState(false)
+export default function RecruiterLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      setSidebarOpen(false)
+    }
+  }, [])
 
   const navItems: NavItem[] = [
-    { name: 'Dashboard', icon: Briefcase, page: '/recruiter/dashboard' },
+    { name: 'Dashboard', icon: BarChart3, page: '/recruiter/dashboard' },
     { name: 'Jobs', icon: Briefcase, page: '/recruiter/jobs' },
     { name: 'Applicants', icon: Users, page: '/recruiter/applicants' },
-    { name: 'Settings', icon: Settings, page: '/recruiter/settings' },
   ]
 
-  const currentPage = pathname.split('/')[1] || 'dashboard'
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
   return (
-    <div className={`flex h-screen ${darkMode ? 'dark' : ''}`}>
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-20'} bg-gray-50 dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 flex flex-col fixed h-screen z-50`}>
-        <div className="p-6 flex items-center justify-between">
-          <h1 className={`font-bold text-xl text-blue-600 ${!sidebarOpen && 'hidden'}`}>RecrutAI</h1>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-lg">
-            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-
-        <nav className="flex-1 px-4 space-y-2">
-          {navItems.map(item => (
-            <Link
-              key={item.page}
-              href={item.page}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                currentPage === item.page.split('/')[1]
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-              }`}
-            >
-              <item.icon size={20} />
-              <span className={`${!sidebarOpen && 'hidden'}`}>{item.name}</span>
-            </Link>
-          ))}
-        </nav>
-
-        {/* Profile Menu */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 relative">
-          <button
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">S</div>
-            <div className={`flex-1 text-left ${!sidebarOpen && 'hidden'}`}>
-              <p className="text-sm font-medium">Sarah</p>
-              <p className="text-xs text-gray-500">Recruiter</p>
+    <div className="flex h-screen overflow-hidden bg-background text-foreground">
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-border/60 bg-muted/20 transition-all duration-300 md:static ${
+          sidebarOpen ? 'translate-x-0 w-64 md:w-72' : '-translate-x-full w-64 md:w-20 md:translate-x-0'
+        }`}
+      >
+        <div className="flex items-center justify-between px-6 py-6">
+          <div className={`flex items-center gap-3 ${sidebarOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-200`}> 
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white">
+              <Briefcase className="h-5 w-5" />
             </div>
-          </button>
-          {showProfileMenu && (
-            <div className="absolute bottom-16 left-4 right-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50">
-              <button className="w-full flex items-center gap-2 px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700">
-                <Settings size={16} /> Settings
-              </button>
-              <button className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700">
-                <LogOut size={16} /> Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className={`flex-1 flex flex-col bg-white dark:bg-gray-950 transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-20'}`}>
-        {/* Topbar */}
-        <div className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-8 py-4 flex items-center justify-between sticky top-0 z-40">
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            <div className="leading-tight">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Recruiter workspace</p>
+              <p className="text-sm font-semibold text-foreground">RecrutAI Command</p>
             </div>
           </div>
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ml-8"
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full"
+            onClick={() => setSidebarOpen((prev) => !prev)}
           >
-            {darkMode ? <Sun size={20} className="text-yellow-500" /> : <Moon size={20} />}
-          </button>
+            {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
         </div>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-auto">
-          {children}
-        </main>
+  <nav className="flex flex-1 flex-col gap-2 px-3 pb-6">
+          {navItems.map((item) => {
+            const active = isActive(item.page)
+            return (
+              <Link
+                key={item.page}
+                href={item.page}
+                className={`group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+                  active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-muted/60'
+                }`}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                    setSidebarOpen(false)
+                  }
+                }}
+              >
+                <item.icon className={`h-4 w-4 ${active ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                <span className={`${sidebarOpen ? 'opacity-100' : 'hidden'} transition-opacity duration-200`}>{item.name}</span>
+              </Link>
+            )
+          })}
+        </nav>
+      </aside>
+
+  {sidebarOpen ? <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm md:hidden" onClick={() => setSidebarOpen(false)} /> : null}
+
+  <div className="flex flex-1 flex-col overflow-hidden transition-all duration-300">
+        <header className="flex items-center justify-between border-b border-border/60 bg-white/90 px-6 py-5 backdrop-blur">
+          <div className="flex items-center gap-3 md:hidden">
+            <Button variant="ghost" size="icon" className="rounded-full" onClick={() => setSidebarOpen((prev) => !prev)}>
+              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
+            <div className="flex items-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white">
+                <Briefcase className="h-4 w-4" />
+              </div>
+              <div>
+                <Badge className="rounded-full bg-primary/10 text-primary">Recruiter</Badge>
+                <p className="text-sm font-medium text-foreground">Talent command center</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="hidden flex-col gap-2 md:flex">
+            <Badge className="w-fit rounded-full bg-primary/10 text-primary">Recruiter workspace</Badge>
+            <h1 className="text-xl font-semibold text-foreground">Talent command center</h1>
+          </div>
+
+          <div className="flex flex-1 items-center justify-end gap-4">
+            <div className="hidden max-w-sm flex-1 md:block">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search roles, applicants, insights..." className="h-11 rounded-full pl-10" />
+              </div>
+            </div>
+            <Button
+              className="hidden items-center gap-2 rounded-full bg-black px-5 py-2 text-sm font-semibold text-white transition hover:bg-black/90 md:flex"
+              onClick={() => console.log('Logout clicked')}
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </Button>
+          </div>
+        </header>
+
+        <div className="border-b border-border/60 bg-muted/40 px-4 py-3 md:hidden">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Search roles, applicants, insights..." className="h-11 rounded-full pl-10" />
+          </div>
+          <Button
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-2 text-sm font-semibold text-white transition hover:bg-black/90"
+            onClick={() => console.log('Logout clicked')}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        </div>
+
+        <main className="flex-1 overflow-y-auto bg-background px-6 py-8">{children}</main>
       </div>
     </div>
   )

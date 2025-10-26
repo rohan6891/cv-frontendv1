@@ -1,277 +1,142 @@
 // components/jobs/JobsContent.tsx
 'use client'
 
-import React, { useState, useRef } from 'react'
-import { Plus, Trash2, ArrowRight, Upload, FileText, Eye } from 'lucide-react'
+import React, { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, ArrowRight, FileText, Plus, Trash2, Upload } from 'lucide-react'
+
 import AddJobModal from './AddJobModal'
-import ResumeAnalyticsView from '../resume/ResumeAnalyticsView'
-
-interface Job {
-  id: number;
-  title: string;
-  department: string;
-  location: string;
-  status: 'active' | 'inactive' | 'paused';
-  description: string;
-  applicants: number;
-  createdDate: string;
-}
-
-interface AnalysisOverall {
-  overall_match_score: number;
-  skills_match: number;
-  experience_match: number;
-  education_match: number;
-  certifications_match: number;
-  missing_skills_count: number;
-  ats_score: number;
-}
-
-interface AnalysisTemplate {
-  overall_analysis: AnalysisOverall;
-  // allow optional additional fields so mocks don't need to include everything
-  charts?: any;
-  profile_highlights?: string[];
-  improvement_suggestions?: string[];
-}
-
-interface Applicant {
-  id: number;
-  name: string;
-  jobId: number;
-  score: number;
-  email: string;
-  skills: string[];
-  experience: number;
-  location?: string;
-  certifications?: string[];
-  nextOpportunity?: string;
-  analysis?: AnalysisTemplate;
-}
+import { getRecruiterApplicants, getRecruiterJobs, type RecruiterApplicant, type RecruiterJob } from '@/lib/recruiter-data'
 
 interface JobsContentProps {
   searchQuery: string
 }
 
-const mockJobs: Job[] = [
-  { id: 1, title: 'Senior React Developer', department: 'Engineering', location: 'San Francisco', status: 'active', description: 'Build scalable UIs', applicants: 4, createdDate: '2024-01-15' },
-  { id: 2, title: 'Product Manager', department: 'Product', location: 'New York', status: 'active', description: 'Lead product strategy', applicants: 1, createdDate: '2024-01-10' },
-]
-
-const mockApplicants: Applicant[] = [
-  { 
-    id: 1, 
-    name: 'Sarah Johnson', 
-    jobId: 1, 
-    score: 92, 
-    email: 'sarah@example.com', 
-    skills: ['React', 'TypeScript', 'Node.js'], 
-    experience: 5, 
-    location: 'San Francisco, CA', 
-    certifications: ['React Certification'], 
-    nextOpportunity: 'Tech Lead',
-    analysis: { 
-      overall_analysis: {
-        overall_match_score: 92,
-        skills_match: 95,
-        experience_match: 90,
-        education_match: 85,
-        certifications_match: 90,
-        missing_skills_count: 1,
-        ats_score: 94,
-      }
-    }
-  },
-  { 
-    id: 2, 
-    name: 'Mike Chen', 
-    jobId: 1, 
-    score: 85, 
-    email: 'mike@example.com', 
-    skills: ['React', 'Python', 'UI Design'], 
-    experience: 3, 
-    location: 'New York, NY', 
-    nextOpportunity: 'Senior Developer',
-    analysis: {
-      overall_analysis: {
-        overall_match_score: 85,
-        skills_match: 80,
-        experience_match: 75,
-        education_match: 80,
-        certifications_match: 70,
-        missing_skills_count: 3,
-        ats_score: 82,
-      },
-    }
-  },
-  { 
-    id: 3, 
-    name: 'Emma Davis', 
-    jobId: 2, 
-    score: 78, 
-    email: 'emma@example.com', 
-    skills: ['Product Strategy', 'Data Analysis', 'UI Design'], 
-    experience: 1, 
-    location: 'New Delhi, India', 
-    certifications: ['Product Designer 2'], 
-    nextOpportunity: 'Senior Designer',
-    analysis: {
-      overall_analysis: {
-        overall_match_score: 78,
-        skills_match: 85,
-        experience_match: 60,
-        education_match: 90,
-        certifications_match: 80,
-        missing_skills_count: 2,
-        ats_score: 75,
-      },
-    }
-  },
-  { 
-    id: 4, 
-    name: 'Alex Rodriguez', 
-    jobId: 1, 
-    score: 88, 
-    email: 'alex@example.com', 
-    skills: ['React', 'Vue', 'Angular'], 
-    experience: 6, 
-    location: 'Austin, TX', 
-    nextOpportunity: 'Engineering Manager',
-    analysis: {
-      overall_analysis: {
-        overall_match_score: 88,
-        skills_match: 90,
-        experience_match: 95,
-        education_match: 70,
-        certifications_match: 85,
-        missing_skills_count: 1,
-        ats_score: 89,
-      },
-    }
-  },
-]
-
 export default function JobsContent({ searchQuery }: JobsContentProps) {
-  const [jobs, setJobs] = useState<Job[]>(mockJobs)
+  const router = useRouter()
+  const [jobs, setJobs] = useState<RecruiterJob[]>(getRecruiterJobs())
   const [showJobModal, setShowJobModal] = useState(false)
   const [showJobApplicants, setShowJobApplicants] = useState(false)
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
-  const [applicants, setApplicants] = useState<Applicant[]>(mockApplicants)
-  const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null)
-  const [showResumeAnalytics, setShowResumeAnalytics] = useState(false)
+  const [selectedJob, setSelectedJob] = useState<RecruiterJob | null>(null)
+  const [applicants, setApplicants] = useState<RecruiterApplicant[]>(getRecruiterApplicants())
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleAddJob = (newJobData: any) => {
-    const newJob: Job = {
+    const newJob: RecruiterJob = {
       id: jobs.length + 1,
       title: newJobData.title || 'Untitled Job',
       department: newJobData.department || 'General',
       location: 'TBD',
-      status: 'active' as const,
+      status: 'active',
       description: newJobData.description || '',
       applicants: 0,
       createdDate: new Date().toISOString().split('T')[0],
     }
-    setJobs([...jobs, newJob])
+    setJobs(prev => [...prev, newJob])
   }
 
   const handleFiles = (files: FileList | null) => {
-    if (files) {
-      Array.from(files).forEach(file => {
-        console.log('Selected/Dropped file:', file.name, file.type)
-      })
-    }
+    if (!files) return
+    Array.from(files).forEach(file => {
+      console.log('Selected/Dropped file:', file.name, file.type)
+    })
   }
 
   const handleBrowseClick = () => {
     fileInputRef.current?.click()
   }
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
     setIsDragOver(true)
   }
 
-  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
+  const handleDragEnter = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
     setIsDragOver(true)
   }
 
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
     setIsDragOver(false)
   }
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault()
     setIsDragOver(false)
-    handleFiles(e.dataTransfer.files)
-  }
-
-  const filteredJobs = jobs.filter(job => 
-    job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    job.department.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const getScoreColor = (score: number) => {
-    if (score >= 90) return 'text-green-600'
-    if (score >= 80) return 'text-blue-600'
-    return 'text-yellow-600'
-  }
-
-  const getProgressColor = (score: number) => {
-    if (score >= 90) return 'bg-green-600'
-    if (score >= 80) return 'bg-blue-600'
-    return 'bg-yellow-600'
+    handleFiles(event.dataTransfer.files)
   }
 
   const handleDeleteApplicant = (id: number) => {
-    setApplicants(applicants.filter(a => a.id !== id))
-    if (selectedApplicant?.id === id) {
-      setSelectedApplicant(null)
-    }
+    setApplicants(prev => prev.filter(applicant => applicant.id !== id))
   }
 
-  const jobApplicantsView = selectedJob ? (() => {
-    const jobApplicants = applicants.filter(a => a.jobId === selectedJob.id)
-    const avgScore = jobApplicants.length > 0 
-      ? Math.round(jobApplicants.reduce((sum, a) => sum + a.score, 0) / jobApplicants.length)
+  const handleDeleteJob = (id: number) => {
+    setJobs(prev => prev.filter(job => job.id !== id))
+  }
+
+  const filteredJobs = jobs.filter(job => {
+    const query = searchQuery.toLowerCase()
+    return job.title.toLowerCase().includes(query) || job.department.toLowerCase().includes(query)
+  })
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return 'text-emerald-600'
+    if (score >= 80) return 'text-foreground'
+    return 'text-amber-600'
+  }
+
+  const getProgressColor = (score: number) => {
+    if (score >= 90) return 'text-emerald-500'
+    if (score >= 80) return 'text-foreground'
+    return 'text-amber-500'
+  }
+
+  const renderApplicants = () => {
+    if (!selectedJob) return null
+
+    const jobApplicants = applicants.filter(applicant => applicant.jobId === selectedJob.id)
+    const avgScore = jobApplicants.length
+      ? Math.round(jobApplicants.reduce((sum, applicant) => sum + applicant.score, 0) / jobApplicants.length)
       : 0
 
-    const filteredApplicants = jobApplicants.filter(app =>
-      app.name.toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-      app.email.toLowerCase().includes((searchQuery || '').toLowerCase())
-    )
+    const filteredApplicants = jobApplicants.filter(applicant => {
+      const query = searchQuery.toLowerCase()
+      return (
+        applicant.name.toLowerCase().includes(query) || applicant.email.toLowerCase().includes(query)
+      )
+    })
 
     return (
-      <div className="p-8 space-y-6 bg-gray-50 dark:bg-gray-900 min-h-screen">
+      <div className="space-y-6">
         <button
           onClick={() => {
             setShowJobApplicants(false)
-            setSelectedApplicant(null)
+            setSelectedJob(null)
           }}
-          className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 mb-4"
+          className="flex items-center gap-2 text-sm font-medium text-foreground transition hover:text-muted-foreground"
         >
-          ← Back to Jobs
+          <ArrowLeft size={16} /> Back to Jobs
         </button>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Applicants for {selectedJob.title}</h2>
-          <p className="text-gray-600 dark:text-gray-400">{selectedJob.department} • {selectedJob.location}</p>
+        <div className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
+          <h2 className="mb-2 text-2xl font-semibold text-foreground">Applicants for {selectedJob.title}</h2>
+          <p className="text-sm text-muted-foreground">
+            {selectedJob.department} • {selectedJob.location}
+          </p>
         </div>
 
-        {/* Upload Section and Quick Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Upload Applicants</h3>
+            <div className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-foreground">Upload Applicants</h3>
               <input
                 ref={fileInputRef}
                 type="file"
                 multiple
                 accept=".pdf,.zip"
-                onChange={(e) => handleFiles(e.target.files)}
+                onChange={event => handleFiles(event.target.files)}
                 className="hidden"
               />
               <div
@@ -280,61 +145,58 @@ export default function JobsContent({ searchQuery }: JobsContentProps) {
                 onDragEnter={handleDragEnter}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-                  isDragOver
-                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                className={`cursor-pointer rounded-2xl border-2 border-dashed p-8 text-center transition-colors ${
+                  isDragOver ? 'border-black bg-muted/40' : 'border-border/60 hover:border-black'
                 }`}
               >
-                <Upload size={32} className="mx-auto mb-2 text-gray-400" />
-                <p className="text-gray-600 dark:text-gray-400">Drag & drop ZIP file or PDF resumes here</p>
-                <p className="text-sm text-gray-500 mt-1">or click to browse</p>
+                <Upload size={32} className="mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">Drag & drop ZIP file or PDF resumes here</p>
+                <p className="mt-1 text-xs text-muted-foreground">or click to browse</p>
               </div>
             </div>
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Quick Stats</h3>
+            <div className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold text-foreground">Quick Stats</h3>
               <div className="space-y-3">
-                <div className="p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Applicants</p>
-                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{jobApplicants.length}</p>
+                <div className="rounded-xl bg-muted/40 p-3">
+                  <p className="text-sm text-muted-foreground">Total Applicants</p>
+                  <p className="text-2xl font-semibold text-foreground">{jobApplicants.length}</p>
                 </div>
-                <div className="p-3 bg-green-50 dark:bg-green-900 rounded-lg">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Avg Score</p>
-                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{avgScore}%</p>
+                <div className="rounded-xl bg-muted/40 p-3">
+                  <p className="text-sm text-muted-foreground">Avg Score</p>
+                  <p className="text-2xl font-semibold text-emerald-600">{avgScore}%</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Applicants List - Full Width */}
         <div className="space-y-4">
-          {filteredApplicants.map(app => (
-            <div 
-              key={app.id}
-              className="bg-white dark:bg-gray-800 rounded-xl border-2 border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-all hover:border-blue-500"
+          {filteredApplicants.map(applicant => (
+            <div
+              key={applicant.id}
+              className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm transition-all hover:border-black hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-6">
-                {/* Avatar and Info */}
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {app.name.charAt(0)}
+                <div className="flex flex-1 items-start gap-4">
+                  <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-black text-lg font-semibold text-white">
+                    {applicant.name.charAt(0)}
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-bold text-gray-900 dark:text-white text-lg">→ {app.name}</h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">0-{app.experience} Years of Experience</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{app.location || 'Location not specified'}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">• Available Immediately</p>
+                    <h3 className="text-lg font-semibold text-foreground">→ {applicant.name}</h3>
+                    <p className="text-xs text-muted-foreground">0-{applicant.experience} Years of Experience</p>
+                    <p className="text-xs text-muted-foreground">
+                      {applicant.location || 'Location not specified'}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">• Available Immediately</p>
                   </div>
                 </div>
 
-                {/* Score Circle */}
-                <div className="flex flex-col items-center gap-2 flex-shrink-0">
-                  <div className="relative w-16 h-16">
-                    <svg className="w-16 h-16 transform -rotate-90" viewBox="0 0 100 100">
+                <div className="flex flex-shrink-0 flex-col items-center gap-2">
+                  <div className="relative h-16 w-16">
+                    <svg className="h-16 w-16 -rotate-90 transform" viewBox="0 0 100 100">
                       <circle
                         cx="50"
                         cy="50"
@@ -342,7 +204,7 @@ export default function JobsContent({ searchQuery }: JobsContentProps) {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="3"
-                        className="text-gray-200 dark:text-gray-700"
+                        className="text-border/40"
                       />
                       <circle
                         cx="50"
@@ -351,48 +213,45 @@ export default function JobsContent({ searchQuery }: JobsContentProps) {
                         fill="none"
                         stroke="currentColor"
                         strokeWidth="3"
-                        strokeDasharray={`${(app.score / 100) * 282.7} 282.7`}
-                        className={`${getProgressColor(app.score)} transition-all`}
+                        strokeDasharray={`${(applicant.score / 100) * 282.7} 282.7`}
+                        className={`${getProgressColor(applicant.score)} transition-all`}
                       />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <span className={`text-lg font-bold ${getScoreColor(app.score)}`}>{app.score}%</span>
+                      <span className={`text-lg font-bold ${getScoreColor(applicant.score)}`}>
+                        {applicant.score}%
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Skills */}
-                <div className="flex flex-wrap gap-2 flex-shrink-0 max-w-xs">
-                  {app.skills.slice(0, 3).map((skill, idx) => (
-                    <span key={idx} className="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full font-medium">
+                <div className="flex max-w-xs flex-shrink-0 flex-wrap gap-2">
+                  {applicant.skills.slice(0, 3).map((skill, index) => (
+                    <span
+                      key={index}
+                      className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground"
+                    >
                       {skill}
                     </span>
                   ))}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2 flex-shrink-0">
-                  <button 
-                    onClick={() => {
-                      console.log('Resume button clicked for:', app.name)
-                      setSelectedApplicant(app)
-                      setShowResumeAnalytics(true)
-                    }}
-                    className="px-4 py-2 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors text-sm font-medium flex items-center gap-2">
+                <div className="flex flex-shrink-0 gap-2">
+                  <button
+                    onClick={() => router.push(`/recruiter/resume/${applicant.id}`)}
+                    className="flex items-center gap-2 rounded-lg border border-border/60 px-4 py-2 text-sm font-medium text-foreground transition hover:border-black"
+                  >
                     <FileText size={16} /> Resume
                   </button>
-                  <button 
-                    onClick={() => {
-                      console.log('Analytics button clicked for:', app.name)
-                      setSelectedApplicant(app)
-                      setShowResumeAnalytics(true)
-                    }}
-                    className="px-4 py-2 bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-800 transition-colors text-sm font-medium">
+                  <button
+                    onClick={() => router.push(`/recruiter/analytics/${applicant.id}`)}
+                    className="rounded-lg bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/90"
+                  >
                     Analytics
                   </button>
                   <button
-                    onClick={() => handleDeleteApplicant(app.id)}
-                    className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg text-red-600 transition-colors"
+                    onClick={() => handleDeleteApplicant(applicant.id)}
+                    className="rounded-lg p-2 text-red-600 transition hover:bg-red-100"
                   >
                     <Trash2 size={20} />
                   </button>
@@ -402,84 +261,81 @@ export default function JobsContent({ searchQuery }: JobsContentProps) {
           ))}
 
           {filteredApplicants.length === 0 && (
-            <div className="text-center py-12">
-              <p className="text-gray-600 dark:text-gray-400 font-medium">No applicants found</p>
+            <div className="py-12 text-center">
+              <p className="font-medium text-muted-foreground">No applicants found</p>
             </div>
           )}
         </div>
       </div>
     )
-  })() : null
+  }
 
-  const jobsView = (
-    <div className="p-8 space-y-6">
+  const renderJobs = () => (
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Job Postings</h1>
-        <button 
+        <h1 className="text-2xl font-semibold text-foreground">Job Postings</h1>
+        <button
           onClick={() => setShowJobModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/90"
         >
           <Plus size={20} /> Add Job
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         {filteredJobs.map(job => (
-          <div key={job.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow">
-            <div className="flex items-start justify-between mb-3">
+          <div
+            key={job.id}
+            className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm transition hover:shadow-md"
+          >
+            <div className="mb-3 flex items-start justify-between">
               <div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-lg">{job.title}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{job.department} • {job.location}</p>
+                <h3 className="text-lg font-semibold text-foreground">{job.title}</h3>
+                <p className="text-sm text-muted-foreground">{job.department} • {job.location}</p>
               </div>
-              <button 
-                onClick={() => setJobs(jobs.filter(j => j.id !== job.id))}
-                className="p-2 hover:bg-red-100 dark:hover:bg-red-900 rounded-lg text-red-600 transition-colors"
+              <button
+                onClick={() => handleDeleteJob(job.id)}
+                className="rounded-lg p-2 text-red-600 transition hover:bg-red-100"
               >
                 <Trash2 size={16} />
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">{job.description}</p>
+            <p className="mb-4 text-sm text-muted-foreground">{job.description}</p>
             <div className="flex items-center justify-between">
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+              <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-foreground">
                 {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
               </span>
               <button
                 onClick={() => {
                   setSelectedJob(job)
                   setShowJobApplicants(true)
-                  setSelectedApplicant(null)
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+                className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/90"
               >
                 View Applicants ({job.applicants}) <ArrowRight size={16} />
               </button>
             </div>
           </div>
         ))}
+
+        {filteredJobs.length === 0 && (
+          <div className="rounded-2xl border border-border/60 bg-white p-12 text-center shadow-sm">
+            <p className="text-sm text-muted-foreground">No job postings match your search</p>
+          </div>
+        )}
       </div>
     </div>
   )
 
   return (
     <>
-      {showJobApplicants ? jobApplicantsView : jobsView}
-      
+      {showJobApplicants ? renderApplicants() : renderJobs()}
+
       <AddJobModal
         isOpen={showJobModal}
         onClose={() => setShowJobModal(false)}
         onAddJob={handleAddJob}
       />
-
-      {/* Resume Analytics Modal */}
-      {showResumeAnalytics && selectedApplicant && (
-        <ResumeAnalyticsView
-          applicant={selectedApplicant as any}
-          onClose={() => {
-            setShowResumeAnalytics(false)
-            setSelectedApplicant(null)
-          }}
-        />
-      )}
     </>
   )
 }

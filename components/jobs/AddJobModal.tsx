@@ -134,24 +134,24 @@ export default function AddJobModal({ isOpen, onClose, onAddJob }: AddJobModalPr
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="w-full max-h-[90vh] max-w-md overflow-y-auto rounded-2xl border border-border/60 bg-white shadow-xl">
+        <div className="border-b border-border/60 p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add New Job</h2>
-            <button onClick={onClose} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
+            <h2 className="text-xl font-semibold text-foreground">Add New Job</h2>
+            <button onClick={onClose} className="rounded p-1 transition hover:bg-muted">
               <X size={20} />
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="flex mt-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="mt-4 flex border-b border-border/60">
             <button
               onClick={() => setActiveTab('url')}
               className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 ${
                 activeTab === 'url'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                  ? 'border-black text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               <Globe size={16} className="inline mr-2" />
@@ -161,8 +161,8 @@ export default function AddJobModal({ isOpen, onClose, onAddJob }: AddJobModalPr
               onClick={() => setActiveTab('manual')}
               className={`flex-1 py-2 px-4 text-sm font-medium border-b-2 ${
                 activeTab === 'manual'
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400'
-                  : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                  ? 'border-black text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
               <UploadCloud size={16} className="inline mr-2" />
@@ -179,12 +179,12 @@ export default function AddJobModal({ isOpen, onClose, onAddJob }: AddJobModalPr
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="Paste job posting URL (e.g., linkedin.com/job/123)"
-                className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-lg border border-border/60 p-3 focus:outline-none focus:ring-2 focus:ring-black"
               />
               <button
                 onClick={handleFetchUrl}
                 disabled={!url.trim() || isExtracting}
-                className="w-full py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:bg-muted"
               >
                 {isExtracting ? 'Extracting...' : 'Fetch & Extract'}
               </button>
@@ -195,13 +195,13 @@ export default function AddJobModal({ isOpen, onClose, onAddJob }: AddJobModalPr
                 value={description}
                 onChange={(e) => setDescription(e.target.value || '')} // Ensure string
                 placeholder="Paste the complete job posting description. Other fields will auto-extract if possible."
-                className="w-full h-32 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none"
+                className="h-32 w-full resize-none rounded-lg border border-border/60 p-3 focus:outline-none focus:ring-2 focus:ring-black"
                 required
               />
-              {isExtracting && <p className="text-sm text-blue-600">Extracting fields...</p>}
+              {isExtracting && <p className="text-sm text-muted-foreground">Extracting fields...</p>}
               {/* Optional: Show extracted preview */}
               {formData.title && (
-                <div className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg text-sm">
+                <div className="rounded-lg border border-border/40 bg-muted/40 p-3 text-sm">
                   <p><strong>Extracted Title:</strong> {formData.title}</p>
                   <p><strong>Department:</strong> {formData.department}</p>
                   <p><strong>Location:</strong> {formData.location}</p>
@@ -211,17 +211,17 @@ export default function AddJobModal({ isOpen, onClose, onAddJob }: AddJobModalPr
           )}
         </div>
 
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <div className="flex justify-end gap-3 border-t border-border/60 p-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition hover:bg-muted"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={!isValid}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            className="rounded-lg bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/90 disabled:cursor-not-allowed disabled:bg-muted"
           >
             Add Job
           </button>

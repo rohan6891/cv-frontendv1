@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { Briefcase } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { jobSeekerNavigationItems } from '@/lib/job-seeker-data'
@@ -21,8 +22,8 @@ export function JobSeekerShell({ children }: { children: ReactNode }) {
     <div className="flex h-screen w-full overflow-hidden bg-background text-foreground">
       <aside className="hidden h-full w-72 flex-col overflow-y-auto border-r border-border/60 bg-muted/20 p-6 md:flex">
         <div className="flex items-center gap-3 pb-6">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-lg font-semibold text-white">
-            PS8
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 text-white">
+            <Briefcase className="h-5 w-5" />
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Job seeker workspace</p>

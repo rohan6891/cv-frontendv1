@@ -2,7 +2,6 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Briefcase, Users } from 'lucide-react'
 
 // Mock data - replace with your state management (e.g., Zustand, Redux, or props from provider)
 const mockJobs = [
@@ -40,36 +39,40 @@ export default function DashboardContent({ searchQuery }: { searchQuery: string 
     .slice(0, 5)
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <div className="space-y-8">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {[
-          { label: 'Total Applicants', value: stats.totalApplicants, color: 'blue' },
-          { label: 'Average Score', value: `${stats.avgScore}%`, color: 'green' },
-          { label: 'Active Jobs', value: stats.activeJobs, color: 'purple' },
+          { label: 'Total Applicants', value: stats.totalApplicants },
+          { label: 'Average Score', value: `${stats.avgScore}%` },
+          { label: 'Active Jobs', value: stats.activeJobs },
         ].map((stat, i) => (
-          <div key={i} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow">
+          <div key={i} className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm transition-shadow hover:shadow-md">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">{stat.label}</p>
-                <p className="text-3xl font-bold mt-2 text-gray-900 dark:text-white">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+                <p className="mt-2 text-3xl font-semibold text-foreground">{stat.value}</p>
               </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Top Applicants</h2>
+      <div className="rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
+        <h2 className="mb-4 text-lg font-semibold text-foreground">Top Applicants</h2>
         <div className="space-y-3">
           {filteredApplicants.map(app => {
             const job = jobs.find(j => j.id === app.jobId)
             return (
-              <div key={app.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              <div key={app.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/40 p-4">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{app.name}</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{job?.title}</p>
+                  <p className="font-medium text-foreground">{app.name}</p>
+                  <p className="text-sm text-muted-foreground">{job?.title}</p>
                 </div>
-                <div className={`text-lg font-bold ${app.score >= 90 ? 'text-green-600' : app.score >= 80 ? 'text-blue-600' : 'text-yellow-600'}`}>
+                <div
+                  className={`text-lg font-semibold ${
+                    app.score >= 90 ? 'text-emerald-600' : app.score >= 80 ? 'text-foreground' : 'text-amber-600'
+                  }`}
+                >
                   {app.score}%
                 </div>
               </div>

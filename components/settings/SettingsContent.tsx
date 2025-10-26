@@ -20,66 +20,66 @@ export default function SettingsContent({}: SettingsContentProps) {
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Settings</h1>
+    <div className="p-4 md:p-8">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
         
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-6">
+        <div className="space-y-6 rounded-2xl border border-border/60 bg-white p-6 shadow-sm">
           {/* Account Settings Section */}
           <div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Account Settings</h2>
+            <h2 className="mb-4 text-lg font-semibold text-foreground">Account Settings</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Name</label>
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
                 <input 
                   type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  className="w-full rounded-lg border border-border/60 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black" 
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                <label className="mb-2 block text-sm font-medium text-muted-foreground">Email</label>
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  className="w-full rounded-lg border border-border/60 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-black" 
                 />
               </div>
             </div>
           </div>
 
           {/* Preferences Section */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Preferences</h2>
+          <div className="border-t border-border/60 pt-6">
+            <h2 className="mb-4 text-lg font-semibold text-foreground">Preferences</h2>
             <div className="space-y-4">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={emailNotifications}
                   onChange={(e) => setEmailNotifications(e.target.checked)}
-                  className="w-4 h-4 rounded" 
+                  className="h-4 w-4 rounded border-border/60 text-black focus:ring-black" 
                 />
-                <span className="text-gray-700 dark:text-gray-300">Email notifications for new applicants</span>
+                <span className="text-sm text-muted-foreground">Email notifications for new applicants</span>
               </label>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input 
                   type="checkbox" 
                   checked={weeklySummary}
                   onChange={(e) => setWeeklySummary(e.target.checked)}
-                  className="w-4 h-4 rounded" 
+                  className="h-4 w-4 rounded border-border/60 text-black focus:ring-black" 
                 />
-                <span className="text-gray-700 dark:text-gray-300">Weekly recruitment summary</span>
+                <span className="text-sm text-muted-foreground">Weekly recruitment summary</span>
               </label>
             </div>
           </div>
 
           {/* Save Button */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <div className="border-t border-border/60 pt-6">
             <button 
               onClick={handleSave}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="rounded-lg bg-black px-6 py-2 text-sm font-semibold text-white transition hover:bg-black/90"
             >
               Save Changes
             </button>
