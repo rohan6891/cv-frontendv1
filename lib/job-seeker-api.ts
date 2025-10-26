@@ -89,7 +89,20 @@ export async function enhanceResume(input: { analysisId: string; templateId: str
     body: form,
   });
   if (!res.ok) throw new Error(await safeError(res));
-  return (await res.json()) as { html: string; pdf_path?: string | null; pdf_url?: string | null };
+  const data = (await res.json()) as {
+    html: string;
+    pdf_path?: string | null;
+    pdf_url?: string | null;
+    enhanced_id?: string | null;
+  };
+  if (data?.pdf_url) {
+    try {
+      data.pdf_url = new URL(data.pdf_url, API_BASE).toString();
+    } catch (error) {
+      // ignore malformed URLs and keep original value
+    }
+  }
+  return data;
 }
 
 export async function listResumeTemplates() {
@@ -98,6 +111,14 @@ export async function listResumeTemplates() {
   });
   if (!res.ok) throw new Error(await safeError(res));
   return (await res.json()) as { items: Array<{ id: string; label: string }> };
+}
+
+export async function getResumeTemplatePreview(templateId: string) {
+  const res = await fetch(`${API_BASE}/job-seeker/resume/templates/${templateId}`, {
+    headers: buildHeaders({ "Content-Type": "application/json" }),
+  });
+  if (!res.ok) throw new Error(await safeError(res));
+  return (await res.json()) as { id: string; label: string; html: string };
 }
 
 export async function generateInterviewPack(input: { analysisId: string; interviewType: string; count: number }) {

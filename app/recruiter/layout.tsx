@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { BarChart3, Briefcase, LogOut, Menu, Search, Users, X } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -17,7 +17,9 @@ type NavItem = {
 
 export default function RecruiterLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [loggingOut, setLoggingOut] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -32,6 +34,20 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
   ]
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
+
+  const handleLogout = () => {
+    if (loggingOut) return
+    setLoggingOut(true)
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
+      router.push('/login')
+    } finally {
+      setLoggingOut(false)
+    }
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-background text-foreground">
@@ -117,10 +133,11 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
             </div>
             <Button
               className="hidden items-center gap-2 rounded-full bg-black px-5 py-2 text-sm font-semibold text-white transition hover:bg-black/90 md:flex"
-              onClick={() => console.log('Logout clicked')}
+              onClick={handleLogout}
+              disabled={loggingOut}
             >
               <LogOut className="h-4 w-4" />
-              Logout
+              {loggingOut ? 'Logging out…' : 'Logout'}
             </Button>
           </div>
         </header>
@@ -132,10 +149,11 @@ export default function RecruiterLayout({ children }: { children: React.ReactNod
           </div>
           <Button
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-black px-5 py-2 text-sm font-semibold text-white transition hover:bg-black/90"
-            onClick={() => console.log('Logout clicked')}
+            onClick={handleLogout}
+            disabled={loggingOut}
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            {loggingOut ? 'Logging out…' : 'Logout'}
           </Button>
         </div>
 

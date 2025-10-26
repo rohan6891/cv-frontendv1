@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { ResumeEnhancer } from '@/components/job-seeker/resume-enhancer'
 import type { UploadedResumeMeta } from '@/lib/job-seeker-data'
-import { enhanceResume, getLatestAnalysis, listResumeTemplates } from '@/lib/job-seeker-api'
+import { enhanceResume, getLatestAnalysis, getResumeTemplatePreview, listResumeTemplates } from '@/lib/job-seeker-api'
 
 export default function ResumePage() {
   const [uploadedResume, setUploadedResume] = useState<UploadedResumeMeta | null>(null)
@@ -58,6 +58,10 @@ export default function ResumePage() {
       onGenerateTemplate={async (templateId) => {
         const res = await enhanceResume({ analysisId, templateId })
         return res
+      }}
+      onFetchTemplateHtml={async (templateId) => {
+        const res = await getResumeTemplatePreview(templateId)
+        return res.html
       }}
       showIntakeFields={false}
     />

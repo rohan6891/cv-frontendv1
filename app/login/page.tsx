@@ -35,6 +35,8 @@ export default function LoginPage() {
       // redirect based on role
       if (user.role === "candidate") {
         router.push("/job-seeker/dashboard")
+      } else if (user.role === "recruiter") {
+        router.push("/recruiter/dashboard")
       } else {
         router.push("/")
       }

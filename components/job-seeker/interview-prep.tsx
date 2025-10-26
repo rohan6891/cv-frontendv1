@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowRight, ChevronDown, ChevronUp, Download, MessageSquare } from 'lucide-react'
+import { ArrowRight, ChevronDown, ChevronUp, Download } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,27 +58,20 @@ export function InterviewPrep({
   }, [showIntakeFields])
 
   const questionBank = useMemo(() => {
-    if (backendItems.length) {
-      return backendItems.map((qa, index) => ({
-        id: `gen-${index}`,
-        topic: interviewTypeLabels[interviewType] ?? 'Interview',
-        question: qa.question,
-        answer: qa.answer,
-      }))
-    }
-    return analysis.interviewTopics.flatMap((topic) =>
-      topic.questions.map((question, index) => ({
-        id: `${topic.topic}-${index}`,
-        topic: topic.topic,
-        question,
-        answer: topic.coaching,
-      })),
-    )
-  }, [analysis.interviewTopics, backendItems, interviewType])
+    return backendItems.map((qa, index) => ({
+      id: `gen-${index}`,
+      topic: interviewTypeLabels[interviewType] ?? 'Interview',
+      question: qa.question,
+      answer: qa.answer,
+    }))
+  }, [backendItems, interviewType])
 
-  const maxQuestions = Math.max(1, Math.min(interviewQuestionLimit, questionBank.length))
-  const sanitizedCount = Math.max(1, Math.min(maxQuestions, parseInt(numberOfQuestions, 10) || 1))
-  const displayedQuestions = questionBank.slice(0, sanitizedCount)
+  const hasGeneratedQuestions = questionBank.length > 0
+  const requestedCount = parseInt(numberOfQuestions, 10) || 1
+  const maxQuestions = hasGeneratedQuestions ? Math.min(interviewQuestionLimit, questionBank.length) : interviewQuestionLimit
+  const sanitizedCount = Math.max(1, Math.min(maxQuestions, requestedCount))
+  const displayedQuestions = hasGeneratedQuestions ? questionBank.slice(0, sanitizedCount) : []
+  const generatedCount = displayedQuestions.length
 
   const interviewTypeLabel = interviewTypeLabels[interviewType] ?? interviewTypeLabels.mixed
 
@@ -154,7 +147,9 @@ export function InterviewPrep({
           </CardTitle>
           <CardDescription>
             {stage === 'results'
-              ? `Here’s a ${sanitizedCount}-question pack aligned to ${analysis.candidate.targetRole}.`
+              ? generatedCount
+                ? `Here’s a ${generatedCount}-question pack aligned to ${analysis.candidate.targetRole}.`
+                : 'No questions were returned. Try adjusting inputs or regenerating.'
               : showIntakeFields
                 ? 'Share the latest role context and supporting resume before generating prompts.'
                 : `Using your ${analysis.candidate.targetRole} analysis for ${analysis.candidate.targetCompany}.`}
@@ -186,35 +181,41 @@ export function InterviewPrep({
                 </div>
               </div>
 
-              <div className="grid gap-4">
-                {displayedQuestions.map((item, index) => {
-                  const isOpen = openQuestionIds.includes(item.id)
-                  return (
-                    <Card key={item.id} className="rounded-3xl border border-border/60 bg-white/80 backdrop-blur transition">
-                      <button
-                        type="button"
-                        onClick={() => toggleQuestion(item.id)}
-                        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
-                      >
-                        <div>
-                          <p className="text-xs font-semibold uppercase tracking-wide text-primary">Question {index + 1}</p>
-                          <p className="mt-1 text-sm font-semibold text-foreground">{item.question}</p>
-                        </div>
-                        {isOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-                      </button>
-                      {isOpen ? (
-                        <div className="border-t border-border/50 bg-white/70 px-5 py-4">
-                          <Badge variant="outline" className="rounded-full">
-                            {item.topic}
-                          </Badge>
-                          <p className="mt-3 text-sm font-medium text-foreground">Suggested response</p>
-                          <p className="mt-2 text-sm text-muted-foreground">{item.answer}</p>
-                        </div>
-                      ) : null}
-                    </Card>
-                  )
-                })}
-              </div>
+              {displayedQuestions.length ? (
+                <div className="grid gap-4">
+                  {displayedQuestions.map((item, index) => {
+                    const isOpen = openQuestionIds.includes(item.id)
+                    return (
+                      <Card key={item.id} className="rounded-3xl border border-border/60 bg-white/80 backdrop-blur transition">
+                        <button
+                          type="button"
+                          onClick={() => toggleQuestion(item.id)}
+                          className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                        >
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-primary">Question {index + 1}</p>
+                            <p className="mt-1 text-sm font-semibold text-foreground">{item.question}</p>
+                          </div>
+                          {isOpen ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                        </button>
+                        {isOpen ? (
+                          <div className="border-t border-border/50 bg-white/70 px-5 py-4">
+                            <Badge variant="outline" className="rounded-full">
+                              {item.topic}
+                            </Badge>
+                            <p className="mt-3 text-sm font-medium text-foreground">Suggested response</p>
+                            <p className="mt-2 text-sm text-muted-foreground">{item.answer}</p>
+                          </div>
+                        ) : null}
+                      </Card>
+                    )
+                  })}
+                </div>
+              ) : (
+                <Card className="rounded-3xl border border-dashed border-primary/40 bg-white/60 p-6 text-sm text-muted-foreground">
+                  <p>No interview questions are available yet. Regenerate the pack once the backend returns results.</p>
+                </Card>
+              )}
             </>
           ) : stage === 'intake' ? (
             <>

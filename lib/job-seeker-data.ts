@@ -208,38 +208,7 @@ export const analysisReport: CandidateAnalysis = {
     "Spell out how you govern experimentation guardrails for AI launches.",
     "Surface a board-level update or narrative you crafted for the strategy pivot.",
   ],
-  interviewTopics: [
-    {
-      topic: "AI product strategy",
-      questions: [
-        "How do you evaluate responsible AI risk before launch?",
-        "Walk us through a time you sunset an AI initiative.",
-        "What signals do you monitor to confirm AI features drive value?",
-      ],
-      coaching:
-        "Connect to the applied AI roadmap you delivered at Lumina and reference the governance framework you set up.",
-    },
-    {
-      topic: "Experimentation and measurement",
-      questions: [
-        "Describe your experimentation framework for feature validation.",
-        "Share a time an experiment disproved your hypothesis and what you did next.",
-        "How do you ensure statistical rigor while moving quickly?",
-      ],
-      coaching:
-        "Reference your weekly metric reviews and how you pair data science with product marketing to interpret results.",
-    },
-    {
-      topic: "Executive communication",
-      questions: [
-        "Tell us about aligning conflicting senior stakeholders.",
-        "How do you adapt the product narrative for board-level updates?",
-        "Describe a moment you influenced a go-to-market pivot.",
-      ],
-      coaching:
-        "Highlight the quarterly storytelling cadences you own and any narrative frameworks you rely on.",
-    },
-  ],
+  interviewTopics: [],
   resumeAngles: [
     {
       templateId: "product-visionary",
