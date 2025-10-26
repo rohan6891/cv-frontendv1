@@ -1,5 +1,5 @@
-import { JobSeekerDashboard } from "@/components/job-seeker-dashboard"
+import { redirect } from "next/navigation"
 
 export default function JobSeekerPage() {
-  return <JobSeekerDashboard />
+  redirect("/job-seeker/dashboard")
 }

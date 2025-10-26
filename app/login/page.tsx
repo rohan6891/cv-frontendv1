@@ -82,7 +82,9 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Button className="h-12 w-full rounded-xl text-base font-semibold">Sign in</Button>
+            <Button asChild className="h-12 w-full rounded-xl text-base font-semibold">
+              <Link href="/job-seeker/dashboard">Sign in</Link>
+            </Button>
             <Button variant="outline" className="h-12 w-full rounded-xl border-border/70">
               <span className="flex items-center justify-center gap-2 text-sm font-medium">
                 Continue with LinkedIn
