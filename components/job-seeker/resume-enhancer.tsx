@@ -23,16 +23,21 @@ function formatTimestamp(isoString: string) {
 export type ResumeEnhancerProps = {
   analysis: CandidateAnalysis
   templates?: ResumeTemplate[]
+  templateIds?: Array<{ id: string; label: string }>
   uploadedResume: UploadedResumeMeta | null
   onUploadResume: (file: File | null) => void
   onGoToAnalysis: () => void
+  onGenerateTemplate?: (templateId: string) => Promise<{ html: string; pdf_path?: string | null; pdf_url?: string | null }>
+  showIntakeFields?: boolean
 }
 
-export function ResumeEnhancer({ analysis, templates = resumeTemplates, uploadedResume, onUploadResume, onGoToAnalysis }: ResumeEnhancerProps) {
+export function ResumeEnhancer({ analysis, templates = resumeTemplates, templateIds, uploadedResume, onUploadResume, onGoToAnalysis, onGenerateTemplate, showIntakeFields }: ResumeEnhancerProps) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const [jobLink, setJobLink] = useState('')
-  const [selectedTemplateId, setSelectedTemplateId] = useState<ResumeTemplate['id']>(templates[0].id)
-  const [generatedResume, setGeneratedResume] = useState<{ templateId: string; content: string } | null>(null)
+  const initialTpl = templateIds?.[0]?.id ?? templates[0]?.id
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>(initialTpl)
+  const [generatedResume, setGeneratedResume] = useState<{ templateId: string; content: string; pdf_url?: string | null } | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const selectedTemplate = useMemo(() => {
     return templates.find((template) => template.id === selectedTemplateId) ?? templates[0]
@@ -66,22 +71,32 @@ export function ResumeEnhancer({ analysis, templates = resumeTemplates, uploaded
     event.target.value = ''
   }
 
-  const handleSelectTemplate = (templateId: ResumeTemplate['id']) => {
+  const handleSelectTemplate = (templateId: string) => {
     setSelectedTemplateId(templateId)
     setGeneratedResume((previous) => (previous?.templateId === templateId ? previous : null))
   }
 
-  const handleGenerateResume = (templateId: ResumeTemplate['id']) => {
-    const template = templates.find((entry) => entry.id === templateId)
-    if (!template) return
-    setGeneratedResume({ templateId, content: template.generatedSample })
+  const handleGenerateResume = async (templateId: string) => {
+    if (onGenerateTemplate) {
+      try {
+        setLoading(true)
+        const res = await onGenerateTemplate(templateId)
+        setGeneratedResume({ templateId, content: res.html, pdf_url: res.pdf_url })
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      const template = templates.find((entry) => entry.id === templateId)
+      if (!template) return
+      setGeneratedResume({ templateId, content: template.generatedSample })
+    }
   }
 
-  const showIntakeFields = !uploadedResume
+  const showIntake = showIntakeFields ?? !uploadedResume
 
   return (
     <div className="space-y-8">
-      {showIntakeFields ? (
+  {showIntake ? (
         <Card className="rounded-[32px] border border-border/70 bg-white/85 backdrop-blur">
           <CardHeader className="space-y-2">
             <Badge className="w-fit rounded-full bg-primary/10 text-primary">Resume intake</Badge>
@@ -117,30 +132,46 @@ export function ResumeEnhancer({ analysis, templates = resumeTemplates, uploaded
           <CardTitle className="text-2xl">Visual gallery</CardTitle>
           <CardDescription>Select a layout to preview before generating your draft.</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-          {templateGallery.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => item.linkedTemplateId && handleSelectTemplate(item.linkedTemplateId)}
-              className="group flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-white/70 p-3 text-left transition hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <div className="relative w-full overflow-hidden rounded-xl">
-                <div className="aspect-[3/4] w-full bg-muted/50" />
-                <img
-                  src={item.imageSrc}
-                  alt={`${item.label} preview`}
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:opacity-100"
-                />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-foreground">{item.label}</p>
-                <p className="text-xs text-muted-foreground">Click to select this template</p>
-              </div>
-            </button>
-          ))}
-        </CardContent>
+        {templateIds && templateIds.length ? (
+          <CardContent className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {templateIds.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => handleSelectTemplate(t.id)}
+                className={`rounded-2xl border ${selectedTemplateId === t.id ? 'border-primary' : 'border-border/60'} bg-white/70 p-3 text-left transition hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary`}
+              >
+                <p className="text-sm font-semibold text-foreground">{t.label}</p>
+                <p className="text-xs text-muted-foreground">Click to select</p>
+              </button>
+            ))}
+          </CardContent>
+        ) : (
+          <CardContent className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            {templateGallery.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => item.linkedTemplateId && handleSelectTemplate(item.linkedTemplateId)}
+                className="group flex flex-col items-start gap-3 rounded-2xl border border-border/60 bg-white/70 p-3 text-left transition hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <div className="relative w-full overflow-hidden rounded-xl">
+                  <div className="aspect-[3/4] w-full bg-muted/50" />
+                  <img
+                    src={item.imageSrc}
+                    alt={`${item.label} preview`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover opacity-80 group-hover:opacity-100"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="text-xs text-muted-foreground">Click to select this template</p>
+                </div>
+              </button>
+            ))}
+          </CardContent>
+        )}
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr,0.8fr]">
@@ -196,28 +227,28 @@ export function ResumeEnhancer({ analysis, templates = resumeTemplates, uploaded
         <Card className="flex h-full flex-col justify-between rounded-[32px] border border-border/70 bg-white/85 backdrop-blur">
           <CardHeader className="space-y-2">
             <Badge className="w-fit rounded-full bg-primary/10 text-primary">Selected template</Badge>
-            <CardTitle className="text-2xl">{selectedTemplate.name}</CardTitle>
-            <CardDescription>{selectedTemplate.description}</CardDescription>
+            <CardTitle className="text-2xl">{templateIds?.find(t=>t.id===selectedTemplateId)?.label || selectedTemplate?.name || 'Template'}</CardTitle>
+            <CardDescription>{selectedTemplate?.description || 'Generate an upgraded draft tailored to your target role.'}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm font-semibold text-muted-foreground">Structure outline</p>
-              <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
-                {selectedTemplate.sections.map((section) => (
-                  <li key={section} className="flex items-center gap-2">
-                    <ArrowRight className="h-4 w-4 text-primary" />
-                    <span>{section}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              We will merge this layout with your existing accomplishments to produce a ready-to-edit draft.
-            </p>
+            {(!templateIds || !templateIds.length) && (
+              <div>
+                <p className="text-sm font-semibold text-muted-foreground">Structure outline</p>
+                <ul className="mt-2 space-y-2 text-sm text-muted-foreground">
+                  {selectedTemplate.sections.map((section) => (
+                    <li key={section} className="flex items-center gap-2">
+                      <ArrowRight className="h-4 w-4 text-primary" />
+                      <span>{section}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground">We will merge this layout with your existing accomplishments to produce a ready-to-edit draft.</p>
           </CardContent>
           <CardFooter className="flex flex-col gap-3 md:flex-row">
-            <Button className="rounded-full" onClick={() => handleGenerateResume(selectedTemplate.id)}>
-              Generate enhanced resume
+            <Button className="rounded-full" onClick={() => handleGenerateResume(selectedTemplateId)} disabled={loading}>
+              {loading ? 'Generating…' : 'Generate enhanced resume'}
             </Button>
             <Button variant="outline" className="rounded-full" onClick={onGoToAnalysis}>
               Back to analysis view
@@ -231,14 +262,19 @@ export function ResumeEnhancer({ analysis, templates = resumeTemplates, uploaded
           <CardHeader className="space-y-2">
             <Badge className="w-fit rounded-full bg-primary/10 text-primary">Enhanced resume draft</Badge>
             <CardTitle className="text-2xl">
-              {templates.find((template) => template.id === generatedResume.templateId)?.name ?? 'Resume'} output
+              {(templateIds?.find(t=>t.id===generatedResume.templateId)?.label) || (templates.find((template) => template.id === generatedResume.templateId)?.name) || 'Resume'} output
             </CardTitle>
-            <CardDescription>Copy and refine the sections, then export to your preferred format.</CardDescription>
+            <CardDescription>Preview the generated HTML below. You can also download the PDF if available.</CardDescription>
           </CardHeader>
-          <CardContent>
-            <pre className="max-h-[400px] overflow-auto rounded-2xl bg-muted/60 p-4 text-xs leading-relaxed text-muted-foreground">
-              {generatedResume.content}
-            </pre>
+          <CardContent className="space-y-4">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-2">
+              <iframe title="Resume Preview" srcDoc={generatedResume.content} className="h-[500px] w-full rounded-xl border border-border/60"></iframe>
+            </div>
+            {generatedResume.pdf_url ? (
+              <a href={generatedResume.pdf_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">
+                Download PDF
+              </a>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

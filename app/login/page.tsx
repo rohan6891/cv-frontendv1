@@ -1,18 +1,49 @@
+"use client"
 import Link from "next/link"
-import type { Metadata } from "next"
-import { ArrowRight, Lock, Mail, Sparkles } from "lucide-react"
+// import type { Metadata } from "next"
+import { Lock, Mail, Sparkles } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+import { login, me } from "@/lib/api"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 
-export const metadata: Metadata = {
-  title: "Log in | PS8 Smart Resume Analyzer",
-  description: "Access your PS8 workspace to continue optimizing resumes and matching with top job opportunities.",
-}
+// export const metadata: Metadata = {
+//   title: "Log in | PS8 Smart Resume Analyzer",
+//   description: "Access your PS8 workspace to continue optimizing resumes and matching with top job opportunities.",
+// }
 
 export default function LoginPage() {
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setLoading(true)
+    try {
+      const { access_token } = await login({ email, password })
+      localStorage.setItem("token", access_token)
+      const user = await me(access_token)
+      localStorage.setItem("user", JSON.stringify(user))
+      // redirect based on role
+      if (user.role === "candidate") {
+        router.push("/job-seeker/dashboard")
+      } else {
+        router.push("/")
+      }
+    } catch (err: any) {
+      setError(err?.message || "Failed to sign in")
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
     <div className="relative flex min-h-screen flex-col bg-background text-foreground md:flex-row">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-blue-500/10" aria-hidden />
@@ -55,13 +86,19 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+            {error && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                {error}
+              </div>
+            )}
+            <form className="space-y-6" onSubmit={onSubmit}>
             <div className="space-y-1">
               <label htmlFor="email" className="text-sm font-medium text-foreground">
                 Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="you@example.com" className="h-12 rounded-xl pl-10" />
+                <Input id="email" type="email" placeholder="you@example.com" className="h-12 rounded-xl pl-10" value={email} onChange={(e)=>setEmail(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-1">
@@ -70,7 +107,7 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input id="password" type="password" placeholder="••••••••" className="h-12 rounded-xl pl-10" />
+                <Input id="password" type="password" placeholder="••••••••" className="h-12 rounded-xl pl-10" value={password} onChange={(e)=>setPassword(e.target.value)} required />
               </div>
             </div>
             <div className="flex items-center justify-between text-sm">
@@ -82,15 +119,10 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Button asChild className="h-12 w-full rounded-xl text-base font-semibold">
-              <Link href="/job-seeker/dashboard">Sign in</Link>
+            <Button type="submit" disabled={loading} className="h-12 w-full rounded-xl text-base font-semibold">
+              {loading ? "Signing in..." : "Sign in"}
             </Button>
-            <Button variant="outline" className="h-12 w-full rounded-xl border-border/70">
-              <span className="flex items-center justify-center gap-2 text-sm font-medium">
-                Continue with LinkedIn
-                <ArrowRight className="h-4 w-4" />
-              </span>
-            </Button>
+            </form>
           </CardContent>
           <CardFooter className="flex flex-col gap-3 text-sm text-muted-foreground">
             <div className="flex justify-center gap-2">

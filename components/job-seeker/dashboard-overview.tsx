@@ -11,13 +11,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from '@/components/ui/progress'
 import {
   activityTimeline,
-  analysisReport,
   computeDashboardMetrics,
   dashboardQuickSteps,
   knowledgeFocusAreas,
   knowledgeResources,
-  recentAnalyses,
-  resumeHistory,
   upcomingInterviews,
   type UploadedResumeMeta,
 } from '@/lib/job-seeker-data'
@@ -57,9 +54,13 @@ export type DashboardOverviewProps = {
   uploadedResume: UploadedResumeMeta | null
   onUploadResume: (file: File | null) => void
   onOpenAnalysis: (analysisId: string) => void
+  analysis: any | null
+  recentAnalyses: Array<{ id: string; role: string; company: string; matchScore: number; updatedAt: string; summary: string; highlights: string[] }>
+  resumeHistory: any[]
+  userName?: string | null
 }
 
-export function DashboardOverview({ uploadedResume, onUploadResume, onOpenAnalysis }: DashboardOverviewProps) {
+export function DashboardOverview({ uploadedResume, onUploadResume, onOpenAnalysis, analysis, recentAnalyses, resumeHistory, userName }: DashboardOverviewProps) {
   const uploadInputRef = useRef<HTMLInputElement | null>(null)
   const router = useRouter()
 
@@ -75,7 +76,7 @@ export function DashboardOverview({ uploadedResume, onUploadResume, onOpenAnalys
     ? `${uploadedResume.name} · ${formatSize(uploadedResume.size)} · Uploaded ${formatTimestamp(uploadedResume.uploadedAt)}`
     : 'No resume uploaded yet. Drop a PDF or DOCX to kick-off a fresh analysis.'
 
-  const dashboardMetrics = computeDashboardMetrics(analysisReport)
+  const dashboardMetrics = analysis ? computeDashboardMetrics(analysis) : []
 
   return (
     <div className="space-y-8">
@@ -85,22 +86,28 @@ export function DashboardOverview({ uploadedResume, onUploadResume, onOpenAnalys
             <Badge className="rounded-full bg-primary/10 text-primary">Workspace overview</Badge>
             <span className="text-xs uppercase tracking-wide text-muted-foreground">Last synced · Oct 25, 2025</span>
           </div>
-          <CardTitle className="text-3xl font-semibold text-foreground">Welcome back, {analysisReport.candidate.name}</CardTitle>
+          <CardTitle className="text-3xl font-semibold text-foreground">Welcome back{userName ? `, ${userName}` : analysis?.candidate?.name ? `, ${analysis.candidate.name}` : ''}</CardTitle>
           <CardDescription>
-            Targeting {analysisReport.candidate.targetRole} at {analysisReport.candidate.targetCompany}. Keep your resume signals and
+            Targeting {analysis?.candidate?.targetRole ?? 'your target role'} at {analysis?.candidate?.targetCompany ?? 'your target company'}. Keep your resume signals and
             interview prep in one streamlined hub.
           </CardDescription>
         </CardHeader>
         <CardFooter className="flex flex-wrap gap-3">
-          <Badge variant="outline" className="rounded-full">
-            Current role · {analysisReport.candidate.currentRole}
-          </Badge>
-          <Badge variant="outline" className="rounded-full">
-            Match score · {Math.round(analysisReport.metrics.jobMatchScore * 100)}%
-          </Badge>
-          <Badge variant="outline" className="rounded-full">
-            ATS readiness · {Math.round(analysisReport.metrics.atsScore * 100)}%
-          </Badge>
+          {analysis?.candidate?.currentRole ? (
+            <Badge variant="outline" className="rounded-full">
+              Current role · {analysis.candidate.currentRole}
+            </Badge>
+          ) : null}
+          {analysis?.metrics?.jobMatchScore != null ? (
+            <Badge variant="outline" className="rounded-full">
+              Match score · {Math.round(analysis.metrics.jobMatchScore * 100)}%
+            </Badge>
+          ) : null}
+          {analysis?.metrics?.atsScore != null ? (
+            <Badge variant="outline" className="rounded-full">
+              ATS readiness · {Math.round(analysis.metrics.atsScore * 100)}%
+            </Badge>
+          ) : null}
         </CardFooter>
       </Card>
 
